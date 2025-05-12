@@ -1,0 +1,344 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* MTA colors with Apple styling */
+  --mta-blue: #0039A6;
+  --mta-blue-light: #4D78CA;
+  --mta-blue-dark: #002D80;
+  --mta-orange: #FF6319;
+  --mta-orange-light: #FF8552;
+  --mta-orange-dark: #CC4B00;
+  --mta-green: #6CBE45;
+  --mta-red: #EE352E;
+  --mta-yellow: #FCCC0A;
+  --mta-light-blue: #00AEEF;
+  
+  /* Apple-inspired neutral colors for light mode */
+  --light-gray-1: #8E8E93;
+  --light-gray-2: #AEAEB2;
+  --light-gray-3: #C7C7CC;
+  --light-gray-4: #D1D1D6;
+  --light-gray-5: #E5E5EA;
+  --light-gray-6: #F2F2F7;
+  
+  /* Apple-inspired neutral colors for dark mode */
+  --dark-gray-1: #8E8E93;
+  --dark-gray-2: #636366;
+  --dark-gray-3: #48484A;
+  --dark-gray-4: #3A3A3C;
+  --dark-gray-5: #2C2C2E;
+  --dark-gray-6: #1C1C1E;
+  
+  /* Apple-inspired text colors */
+  --light-text-primary: #1D1D1F;
+  --light-text-secondary: #86868B;
+  --light-text-tertiary: #6E6E73;
+  --dark-text-primary: #FFFFFF;
+  --dark-text-secondary: #ABABAF;
+  --dark-text-tertiary: #757579;
+  
+  /* Apple-inspired backgrounds */
+  --light-bg-primary: #F5F5F7;
+  --light-bg-secondary: #FFFFFF;
+  --light-bg-tertiary: rgba(255, 255, 255, 0.8);
+  --dark-bg-primary: #111111;
+  --dark-bg-secondary: #1C1C1E;
+  --dark-bg-tertiary: rgba(30, 30, 30, 0.8);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
+    'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--light-bg-primary);
+  color: var(--light-text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--dark-bg-primary);
+    color: var(--dark-text-primary);
+  }
+}
+
+body.dark-mode {
+  background-color: var(--dark-bg-primary);
+  color: var(--dark-text-primary);
+}
+
+code {
+  font-family: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+}
+
+/* Scroll bar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 10px;
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Leaflet map container */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+body.dark-mode .leaflet-container {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Card style for consistent design */
+.apple-card {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+}
+
+body.dark-mode .apple-card {
+  background-color: rgba(30, 30, 30, 0.8);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.apple-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+body.dark-mode .apple-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* Floating dock animation */
+.floating-dock {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px) translateX(-50%); }
+  50% { transform: translateY(-5px) translateX(-50%); }
+  100% { transform: translateY(0px) translateX(-50%); }
+}
+
+/* MTA subway line colors with improved styling */
+.line-1, .line-2, .line-3 {
+  background-color: #EE352E;
+  color: white;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.line-4, .line-5, .line-6 {
+  background-color: #00933C;
+  color: white;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.line-7 {
+  background-color: #B933AD;
+  color: white;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.line-A, .line-C, .line-E {
+  background-color: #0039A6;
+  color: white;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.line-B, .line-D, .line-F, .line-M {
+  background-color: #FF6319;
+  color: white;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.line-G {
+  background-color: #6CBE45;
+  color: white;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.line-J, .line-Z {
+  background-color: #996633;
+  color: white;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.line-L {
+  background-color: #A7A9AC;
+  color: white;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.line-N, .line-Q, .line-R, .line-W {
+  background-color: #FCCC0A;
+  color: black;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+/* Alert severity indicators */
+.severity-high {
+  background-color: var(--mta-red);
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 4px 12px;
+}
+
+.severity-medium {
+  background-color: var(--mta-orange);
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 4px 12px;
+}
+
+.severity-low {
+  background-color: var(--mta-green);
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 4px 12px;
+}
+
+/* Custom map markers with Apple styling */
+.custom-icon {
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.marker-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Apple-inspired animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* MTA-colored buttons with Apple styling */
+.mta-button-primary {
+  background-color: var(--mta-blue);
+  color: white;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mta-button-primary:hover {
+  background-color: var(--mta-blue-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 57, 166, 0.25);
+}
+
+.mta-button-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 57, 166, 0.25);
+}
+
+.mta-button-secondary {
+  background-color: rgba(0, 57, 166, 0.1);
+  color: var(--mta-blue);
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+body.dark-mode .mta-button-secondary {
+  background-color: rgba(0, 57, 166, 0.2);
+  color: var(--mta-blue-light);
+}
+
+.mta-button-secondary:hover {
+  background-color: rgba(0, 57, 166, 0.15);
+  transform: translateY(-2px);
+}
+
+body.dark-mode .mta-button-secondary:hover {
+  background-color: rgba(0, 57, 166, 0.25);
+}
+
+.mta-button-secondary:active {
+  transform: translateY(0);
+} 
