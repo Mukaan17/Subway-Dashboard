@@ -2,7 +2,7 @@
 # @Author: Mukhil Sundararaj
 # @Date:   2025-05-10 23:44:37
 # @Last Modified by:   Mukhil Sundararaj
-# @Last Modified time: 2025-05-11 20:50:32
+# @Last Modified time: 2025-05-12 16:11:22
 import os
 import logging
 from typing import List, Optional, Dict, Any
@@ -330,6 +330,7 @@ LINE_COLORS = {
 
 # Create FastAPI app
 app = FastAPI(
+    root_path="/api",
     title="MTA Real-Time Data API",
     description="API for real-time MTA subway, service alerts, and elevator/escalator status",
     version="1.0.0",
