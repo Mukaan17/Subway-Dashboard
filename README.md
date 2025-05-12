@@ -39,7 +39,7 @@ A real-time big data processing pipeline for MTA subway data. The system ingests
 ### Installation
 
 1. Clone the repository
-2. Set up your `.env` file with your MTA API key
+2. Set up your `.env` file
 3. Run `docker-compose up` to start all services
 4. Access the dashboard at `http://localhost:3000`
 
