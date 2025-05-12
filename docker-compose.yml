@@ -1,12 +1,10 @@
 # @Author: Mukhil Sundararaj
 # @Date:   2025-05-10 23:41:24
 # @Last Modified by:   Mukhil Sundararaj
-# @Last Modified time: 2025-05-12 11:58:44
-
-version: '3.8'
+# @Last Modified time: 2025-05-11 13:41:36
 
 services:
-  # Zookeeper for Kafka - optimized for GCP
+  # Zookeeper for Kafka
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
     platform: linux/amd64
@@ -16,20 +14,9 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-      KAFKA_HEAP_OPTS: "-Xmx128M -Xms64M"
     restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.3'
-          memory: 200M
 
-  # Kafka broker - optimized for GCP e2-standard-2
+  # Kafka broker
   kafka:
     image: confluentinc/cp-kafka:7.3.0
     platform: linux/amd64
@@ -38,92 +25,55 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
+      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_LOG_RETENTION_HOURS: 24
-      KAFKA_LOG_RETENTION_BYTES: 1073741824  # 1GB
-      KAFKA_NUM_PARTITIONS: 1
-      KAFKA_HEAP_OPTS: "-Xmx512M -Xms256M"
-      KAFKA_JVM_PERFORMANCE_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35"
-      KAFKA_GC_LOG_OPTS: "-Xlog:gc*:file=/var/log/kafka/gc.log:time,tags:filecount=5,filesize=102400"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "3"
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 600M
-    healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
 
-  # MongoDB - optimized for GCP
+  # MongoDB for data storage
   mongodb:
     image: mongo:4.4
     container_name: mongodb
-    command: --wiredTigerCacheSizeGB 0.5 --setParameter maxConnections=100
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
     restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 600M
-    environment:
-      - MONGO_INITDB_DATABASE=subway_dash
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
-  # MTA Data Producer - optimized for GCP
+  # Kafka UI for debugging
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    restart: unless-stopped
+
+  # MTA Data Producer
   producer:
     build:
       context: .
       dockerfile: src/producer/Dockerfile
     container_name: mta-producer
     depends_on:
-      kafka:
-        condition: service_healthy
+      - kafka
     env_file:
       - .env
     volumes:
       - ./src/producer:/app
     restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.3'
-          memory: 200M
 
-  # Spark Master - optimized for GCP
+  # Spark Master
   spark-master:
     image: bitnami/spark:3.3.1
     container_name: spark-master
@@ -136,165 +86,70 @@ services:
       - SPARK_RPC_ENCRYPTION_ENABLED=no
       - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
       - SPARK_SSL_ENABLED=no
-      - SPARK_DAEMON_MEMORY=512m
     restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 600M
-    volumes:
-      - spark_data:/opt/bitnami/spark/work
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
-  # Spark Worker - optimized for GCP e2-standard-2
+  # Spark Worker
   spark-worker:
     image: bitnami/spark:3.3.1
     container_name: spark-worker
     depends_on:
-      spark-master:
-        condition: service_healthy
+      - spark-master
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_MEMORY=512M
-      - SPARK_WORKER_CORES=1
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
       - SPARK_RPC_ENCRYPTION_ENABLED=no
       - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
       - SPARK_SSL_ENABLED=no
-      - SPARK_DAEMON_MEMORY=256m
     restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 600M
-    volumes:
-      - spark_data:/opt/bitnami/spark/work
-    tmpfs:
-      - /tmp/spark-temp:rw,noexec,nosuid,size=250m
-      - /tmp/spark-work:rw,noexec,nosuid,size=250m
 
-  # Spark Processor - optimized for GCP
+  # Spark Processor
   processor:
     build:
       context: .
       dockerfile: src/processor/Dockerfile
     container_name: mta-processor
     depends_on:
-      kafka:
-        condition: service_healthy
-      spark-master:
-        condition: service_healthy
-      mongodb:
-        condition: service_healthy
+      - kafka
+      - spark-master
+      - mongodb
     volumes:
       - ./src/processor:/app
     restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 400M
-    environment:
-      - SPARK_LOCAL_DIRS=/tmp/spark-temp
-      - SPARK_WORKER_DIR=/tmp/spark-work
-      - SPARK_EXECUTOR_MEMORY=256m
-      - SPARK_DRIVER_MEMORY=256m
-    tmpfs:
-      - /tmp/spark-temp:rw,noexec,nosuid,size=250m
-      - /tmp/spark-work:rw,noexec,nosuid,size=250m
 
-  # API Backend - optimized for GCP
+  # API Backend
   api:
     build:
       context: .
       dockerfile: src/api/Dockerfile
     container_name: mta-api
     depends_on:
-      mongodb:
-        condition: service_healthy
+      - mongodb
     ports:
       - "8000:8000"
     volumes:
       - ./src/api:/app
     restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.3'
-          memory: 300M
-    environment:
-      - MAX_WORKERS=2
-      - PYTHONUNBUFFERED=1
-      - PYTHONDONTWRITEBYTECODE=1
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-  # React Dashboard - production mode
+  # React Dashboard
   dashboard:
     build:
       context: ./dashboard
-      dockerfile: Dockerfile
-      args:
-        - NODE_ENV=production
     container_name: mta-dashboard
     depends_on:
-      api:
-        condition: service_healthy
+      - api
     ports:
-      - "3000:80"
+      - "3000:3000"
+    volumes:
+      - ./dashboard:/app
+      - /app/node_modules
     environment:
       - REACT_APP_API_URL=http://localhost:8000
-      - NODE_ENV=production
+      - CHOKIDAR_USEPOLLING=true
+      - WDS_SOCKET_PORT=3000
     restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.2'
-          memory: 200M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      
+
 volumes:
-  mongo_data:
-    driver: local
-  spark_data:
-    driver: local
+  mongo_data: 
