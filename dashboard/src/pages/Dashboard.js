@@ -431,9 +431,14 @@ const Dashboard = () => {
                       {alert.header || 'Service Alert'}
                     </Typography>
                     <Chip 
-                      label={alert.severity || 'Medium'} 
+                      label={alert.severity || 'MODERATE'} 
                       size="small" 
-                      className={`severity-${alert.severity ? alert.severity.toLowerCase() : 'medium'}`}
+                      color={
+                        alert.severity === 'SEVERE' ? 'error' :
+                        alert.severity === 'MODERATE' ? 'warning' :
+                        alert.severity === 'LOW' ? 'success' :
+                        'default'
+                      }
                     />
                   </Box>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -446,15 +451,44 @@ const Dashboard = () => {
                       {formatDate(alert.created_at) || 'Unknown date'}
                     </Typography>
                     <Box>
-                      {alert.affected_lines?.map(line => (
-                        <Chip 
-                          key={line} 
-                          label={line} 
-                          size="small" 
-                          className={`line-${line}`}
-                          sx={{ ml: 0.5, minWidth: 32, height: 24 }}
-                        />
-                      ))}
+                      {alert.routes?.map(line => {
+                        // Get color based on line
+                        let bgColor = '#555555'; // Default color
+                        
+                        // MTA line colors
+                        const lineColors = {
+                          '1': '#EE352E', '2': '#EE352E', '3': '#EE352E', // Red
+                          '4': '#00933C', '5': '#00933C', '6': '#00933C', // Green
+                          '7': '#B933AD', // Purple
+                          'A': '#0039A6', 'C': '#0039A6', 'E': '#0039A6', // Blue
+                          'B': '#FF6319', 'D': '#FF6319', 'F': '#FF6319', 'M': '#FF6319', // Orange
+                          'G': '#6CBE45', // Light Green
+                          'J': '#996633', 'Z': '#996633', // Brown
+                          'L': '#A7A9AC', // Grey
+                          'N': '#FCCC0A', 'Q': '#FCCC0A', 'R': '#FCCC0A', 'W': '#FCCC0A', // Yellow
+                          'S': '#808183', // Dark Grey
+                          'SIR': '#0039A6', // Blue (Staten Island Railway)
+                        };
+                        
+                        if (lineColors[line]) {
+                          bgColor = lineColors[line];
+                        }
+                        
+                        return (
+                          <Chip 
+                            key={line} 
+                            label={line} 
+                            size="small" 
+                            sx={{ 
+                              ml: 0.5, 
+                              minWidth: 32, 
+                              height: 24,
+                              bgcolor: bgColor,
+                              color: ['N', 'Q', 'R', 'W'].includes(line) ? '#000' : '#FFF'
+                            }}
+                          />
+                        );
+                      })}
                     </Box>
                   </Box>
                 </Box>

@@ -166,7 +166,7 @@ function Layout({ children }) {
         component="main"
         sx={{ 
           flexGrow: 1, 
-          pt: 8,
+          pt: 11,
           pb: 10, // Add padding at the bottom for the dock
           width: '100%',
           backgroundColor: theme.palette.background.default,
@@ -176,7 +176,8 @@ function Layout({ children }) {
           <Box sx={{ 
             borderRadius: 4,
             overflow: 'hidden',
-            py: 2
+            py: 3,
+            px: 2
           }}>
             {children}
           </Box>

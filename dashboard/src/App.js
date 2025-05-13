@@ -17,11 +17,20 @@ const Elevators = lazy(() => import('./pages/Elevators'));
 export const ThemeContext = createContext({ toggleTheme: () => {}, mode: 'light' });
 
 function App() {
-  const [mode, setMode] = useState('light');
+  const [mode, setMode] = useState(() => {
+    // Check if theme preference is stored in localStorage
+    const savedMode = localStorage.getItem('themeMode');
+    return savedMode || 'light';
+  });
 
   // Toggle theme function
   const toggleTheme = () => {
-    setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+    setMode((prevMode) => {
+      const newMode = prevMode === 'light' ? 'dark' : 'light';
+      // Save to localStorage
+      localStorage.setItem('themeMode', newMode);
+      return newMode;
+    });
   };
 
   // Update body class when theme changes
@@ -31,10 +40,24 @@ function App() {
     } else {
       document.body.classList.remove('dark-mode');
     }
+
+    // Add transition styles to body
+    document.body.style.transition = 'background-color 0.3s ease-in-out, color 0.3s ease-in-out';
   }, [mode]);
 
   // Create MTA-inspired theme with Apple design style
   const theme = useMemo(() => createTheme({
+    transitions: {
+      duration: {
+        shortest: 150,
+        shorter: 200, 
+        short: 250,
+        standard: 300,
+        complex: 375,
+        enteringScreen: 225,
+        leavingScreen: 195,
+      },
+    },
     palette: {
       mode,
       primary: {

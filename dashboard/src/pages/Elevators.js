@@ -23,11 +23,13 @@ import {
   TableHead,
   TableRow,
   TableSortLabel,
-  TablePagination
+  TablePagination,
+  InputAdornment
 } from '@mui/material';
 import {
-  Accessible as AccessibleIcon,
-  EscalatorWarning as EscalatorIcon
+  AccessibleForward as AccessibleIcon,
+  EscalatorWarning as EscalatorIcon,
+  Search as SearchIcon
 } from '@mui/icons-material';
 import moment from 'moment';
 
@@ -59,6 +61,7 @@ const Elevators = () => {
       try {
         setLoading(true);
         const data = await fetchElevatorOutages(outageType, stationFilter);
+        console.log('Fetched elevator outage data:', data);
         setOutages(data);
         
         // Apply filters
@@ -73,16 +76,17 @@ const Elevators = () => {
         if (searchFilter) {
           const search = searchFilter.toLowerCase();
           filtered = filtered.filter(outage => 
-            outage.station_name.toLowerCase().includes(search) || 
-            outage.serving.toLowerCase().includes(search) ||
-            outage.reason.toLowerCase().includes(search)
+            (outage.station_name || '').toLowerCase().includes(search) || 
+            (outage.serving || '').toLowerCase().includes(search) ||
+            (outage.reason || '').toLowerCase().includes(search)
           );
         }
         
         // Apply sorting
         filtered = [...filtered].sort((a, b) => {
-          const aValue = a[orderBy];
-          const bValue = b[orderBy];
+          // Handle potentially missing values safely
+          const aValue = a[orderBy] || '';
+          const bValue = b[orderBy] || '';
           
           if (order === 'asc') {
             return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
@@ -91,6 +95,7 @@ const Elevators = () => {
           }
         });
         
+        console.log('Filtered and sorted outages:', filtered.slice(0, 5));
         setFilteredOutages(filtered);
       } catch (error) {
         console.error('Error fetching elevator outages:', error);
@@ -170,7 +175,7 @@ const Elevators = () => {
   
   return (
     <Box>
-      <Typography variant="h4" component="h1" gutterBottom>
+      <Typography variant="h4" component="h1" gutterBottom sx={{ mt: 2 }}>
         Elevator & Escalator Outages
       </Typography>
       
@@ -236,53 +241,41 @@ const Elevators = () => {
             <TextField
               fullWidth
               label="Search"
+              variant="outlined"
               value={searchFilter}
               onChange={handleSearchChange}
-              placeholder="Search outages..."
+              placeholder="Search by station, reason, etc."
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
             />
           </Grid>
         </Grid>
       </Paper>
       
-      {loading && outages.length === 0 ? (
-        <Box display="flex" justifyContent="center" alignItems="center" height="60vh">
+      {/* Results */}
+      <Paper>
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" sx={{ p: 4 }}>
           <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          <Box mb={2} display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="body1">
-              Showing {Math.min(rowsPerPage, filteredOutages.length)} of {filteredOutages.length} outages
-              {equipmentFilter && ` for ${equipmentFilter.toLowerCase()}`}
-              {stationFilter && ` at ${stationFilter}`}
-              {searchFilter && ` matching "${searchFilter}"`}
+            <Typography variant="h6" sx={{ ml: 2 }}>
+              Loading outage data...
             </Typography>
-            
-            <Button 
-              variant="outlined" 
-              color="primary"
-              onClick={() => {
-                setEquipmentFilter('');
-                setStationFilter('');
-                setSearchFilter('');
-              }}
-            >
-              Clear Filters
-            </Button>
+        </Box>
+        ) : filteredOutages.length === 0 ? (
+          <Box display="flex" justifyContent="center" alignItems="center" sx={{ p: 4 }}>
+            <Typography variant="h6" color="text.secondary">
+              No elevator or escalator outages found.
+            </Typography>
           </Box>
-          
-          {filteredOutages.length === 0 ? (
-            <Paper sx={{ p: 4, textAlign: 'center' }}>
-              <EscalatorIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6">No outages found</Typography>
-              <Typography variant="body1" color="text.secondary">
-                Try changing your filters or check back later
-              </Typography>
-            </Paper>
           ) : (
-            <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-              <TableContainer sx={{ maxHeight: 600 }}>
-                <Table stickyHeader aria-label="outages table">
+          <>
+            <TableContainer>
+              <Table>
                   <TableHead>
                     <TableRow>
                       {headCells.map((headCell) => (
@@ -306,32 +299,31 @@ const Elevators = () => {
                       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                       .map((outage, index) => (
                         <TableRow
+                        key={outage.equipment_id + index}
                           hover
-                          key={index}
-                          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                         >
                           <TableCell>{outage.station_name}</TableCell>
                           <TableCell>
-                            <Chip 
-                              label={outage.equipment_type} 
-                              size="small" 
-                              color={outage.equipment_type === 'ELEVATOR' ? 'primary' : 'secondary'}
-                              icon={outage.equipment_type === 'ELEVATOR' ? <AccessibleIcon /> : <EscalatorIcon />}
-                            />
+                          {outage.equipment_type === 'ELEVATOR' ? (
+                            <AccessibleIcon color="primary" />
+                          ) : (
+                            <EscalatorIcon color="secondary" />
+                          )}
+                          {' ' + outage.equipment_type}
                           </TableCell>
                           <TableCell>{outage.serving}</TableCell>
                           <TableCell>{outage.reason}</TableCell>
                           <TableCell>
-                            {formatDate(outage.outage_start, 'MMM DD, YYYY h:mm A')}
+                          {outage.outage_start ? formatDate(outage.outage_start, 'MMM D, YYYY') : 'N/A'}
                           </TableCell>
                           <TableCell>
-                            {outage.outage_end ? formatDate(outage.outage_end, 'MMM DD, YYYY h:mm A') : 'Indefinite'}
+                          {outage.outage_end ? formatDate(outage.outage_end, 'MMM D, YYYY') : 'N/A'}
                           </TableCell>
                           <TableCell>
                             <Chip 
-                              label={outage.status} 
+                            label={outageType === 'current' ? 'Out of Service' : 'Planned'}
+                            color={outageType === 'current' ? 'error' : 'warning'}
                               size="small" 
-                              color={outage.status === 'OUT_OF_SERVICE' ? 'error' : 'warning'}
                             />
                           </TableCell>
                         </TableRow>
@@ -340,7 +332,7 @@ const Elevators = () => {
                 </Table>
               </TableContainer>
               <TablePagination
-                rowsPerPageOptions={[5, 10, 25, 50]}
+              rowsPerPageOptions={[10, 25, 50, 100]}
                 component="div"
                 count={filteredOutages.length}
                 rowsPerPage={rowsPerPage}
@@ -348,10 +340,9 @@ const Elevators = () => {
                 onPageChange={handleChangePage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
               />
-            </Paper>
-          )}
         </>
       )}
+      </Paper>
     </Box>
   );
 };

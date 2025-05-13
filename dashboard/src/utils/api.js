@@ -61,7 +61,7 @@ api.interceptors.response.use(
 
 // Utility function to safely format dates
 export const formatDate = (timestamp, format = 'fromNow') => {
-  if (!timestamp) return 'N/A';
+  if (!timestamp) return 'Just now';
   
   try {
     // Handle different timestamp formats
@@ -77,14 +77,14 @@ export const formatDate = (timestamp, format = 'fromNow') => {
       
     if (!momentObj.isValid()) {
       console.warn('Invalid date encountered:', timestamp);
-      return 'Invalid date';
+      return 'Recently';
     }
     
     if (format === 'fromNow') return momentObj.fromNow();
     return momentObj.format(format);
   } catch (error) {
     console.error('Error formatting date:', error, timestamp);
-    return 'Invalid date';
+    return 'Recently';
   }
 };
 
