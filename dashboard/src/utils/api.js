@@ -8,7 +8,7 @@ import axios from 'axios';
 import moment from 'moment';
 
 // API base URL with fallback
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mta-dashboard.real-time.work/api/api';
 
 console.log('API Base URL configured as:', API_BASE_URL);
 
